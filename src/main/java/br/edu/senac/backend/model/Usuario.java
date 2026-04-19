@@ -2,7 +2,9 @@ package br.edu.senac.backend.model;
 
 import br.edu.senac.backend.model.enums.PerfilUsuario;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -12,7 +14,9 @@ import java.util.List;
 
 @Entity
 @Table(name = "usuarios")
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
 public class Usuario implements UserDetails {
 
     @Id
@@ -43,4 +47,3 @@ public class Usuario implements UserDetails {
     @Override
     public String getUsername() { return email; }
 }
-

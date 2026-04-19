@@ -2,6 +2,7 @@ package br.edu.senac.backend.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,8 @@ import java.util.Date;
 @Service
 public class JwtService {
 
-    private static final String SECRET = "sua-chave-secreta-com-minimo-256-bits-aqui";
+    @Value("${jwt.secret}")
+    private String SECRET;
     private static final long EXPIRATION = 86400000; // 24h em ms
 
     private SecretKey getKey() {

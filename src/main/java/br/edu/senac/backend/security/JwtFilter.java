@@ -23,27 +23,34 @@ public class JwtFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
+                                    FilterChain chain) throws ServletException {
 
         String header = request.getHeader("Authorization");
 
         if (header == null || !header.startsWith("Bearer ")) {
-            chain.doFilter(request, response);
+            try {
+                chain.doFilter(request, response);
+            } catch (IOException e) {
+                throw new ServletException(e);
+            }
             return;
         }
 
-        String token = header.substring(7);
-        String email = jwtService.extrairEmail(token);
+        try {
+            String token = header.substring(7);
+            String email = jwtService.extrairEmail(token);
 
-        if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails user = userDetailsService.loadUserByUsername(email);
-            if (jwtService.tokenValido(token, user)) {
-                UsernamePasswordAuthenticationToken auth =
-                        new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails user = userDetailsService.loadUserByUsername(email);
+                if (jwtService.tokenValido(token, user)) {
+                    UsernamePasswordAuthenticationToken auth =
+                            new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
+            chain.doFilter(request, response);
+        } catch (IOException e) {
+            throw new ServletException(e);
         }
-
-        chain.doFilter(request, response);
     }
 }
