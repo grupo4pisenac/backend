@@ -2,11 +2,13 @@ package br.edu.senac.backend.model;
 
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
 import jakarta.persistence.*;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "solicitacoes")
+@Data
 public class Solicitacao {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

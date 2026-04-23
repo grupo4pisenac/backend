@@ -1,9 +1,11 @@
 package br.edu.senac.backend.model;
 
 import jakarta.persistence.*;
+import lombok.Data;
 
 @Entity
 @Table(name = "certificados")
+@Data
 public class Certificado {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
