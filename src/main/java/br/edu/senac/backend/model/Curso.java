@@ -17,4 +17,7 @@ public class Curso {
 
     @OneToMany(mappedBy = "curso")
     private List<RegraAtividade> regras;
+
+    @ManyToMany(mappedBy = "cursos")
+    private List<Usuario> usuarios;
 }

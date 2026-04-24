@@ -5,6 +5,7 @@ import br.edu.senac.backend.dto.SolicitacaoResponse;
 import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.Solicitacao;
 import br.edu.senac.backend.model.Usuario;
+import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
 import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.SolicitacaoRepository;
@@ -22,6 +23,7 @@ public class SolicitacaoService {
     private final SolicitacaoRepository solicitacaoRepository;
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final EmailService emailService;
 
     public SolicitacaoResponse criar(Long alunoId, SolicitacaoRequest request) {
         Usuario aluno = buscarUsuario(alunoId);
@@ -37,6 +39,14 @@ public class SolicitacaoService {
         solicitacao.setCurso(curso);
 
         solicitacaoRepository.save(solicitacao);
+        curso.getUsuarios().stream()
+                .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
+                .forEach(coordenador -> emailService.enviarEmailNovaSolicitacao(
+                        coordenador.getEmail(),
+                        aluno.getNome(),
+                        solicitacao.getArea()
+                ));
+
         return toResponse(solicitacao);
     }
 
@@ -61,6 +71,11 @@ public class SolicitacaoService {
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
         solicitacao.setStatus(novoStatus);
         solicitacaoRepository.save(solicitacao);
+        emailService.enviarEmailStatusAtualizado(
+                solicitacao.getAluno().getEmail(),
+                solicitacao.getAluno().getNome(),
+                novoStatus
+        );
         return toResponse(solicitacao);
     }
 

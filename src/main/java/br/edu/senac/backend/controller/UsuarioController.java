@@ -25,13 +25,13 @@ public class UsuarioController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
     public ResponseEntity<List<UsuarioResponse>> listar() {
         return ResponseEntity.ok(usuarioService.listar());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
     public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
     }
