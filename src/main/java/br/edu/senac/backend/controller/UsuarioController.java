@@ -19,7 +19,7 @@ public class UsuarioController {
     private final UsuarioService usuarioService;
 
     @PostMapping
-    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
     public ResponseEntity<UsuarioResponse> criar(@RequestBody @Valid UsuarioRequest request) {
         return ResponseEntity.status(201).body(usuarioService.criar(request));
     }
