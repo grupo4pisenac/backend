@@ -4,5 +4,8 @@ import lombok.Data;
 
 @Data
 public class AreaProgressoDTO {
-
+    private Integer limiteHoras;
+    private boolean concluido;
+    private Integer horasAprovadas;
+    private String area;
 }
