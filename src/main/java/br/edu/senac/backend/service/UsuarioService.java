@@ -89,4 +89,30 @@ public class UsuarioService {
         response.setPerfil(usuario.getPerfil());
         return response;
     }
+
+    public UsuarioResponse associarCurso(Long usuarioId, Long cursoId) {
+        Usuario usuario = buscarUsuario(usuarioId);
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+
+        boolean jaAssociado = usuario.getCursos().stream()
+                .anyMatch(c -> c.getId().equals(cursoId));
+
+        if (jaAssociado) {
+            throw new RuntimeException("Usuário já está associado a este curso");
+        }
+
+        usuario.getCursos().add(curso);
+        usuarioRepository.save(usuario);
+        return toResponse(usuario);
+    }
+
+    public void desassociarCurso(Long usuarioId, Long cursoId) {
+        Usuario usuario = buscarUsuario(usuarioId);
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+
+        usuario.getCursos().remove(curso);
+        usuarioRepository.save(usuario);
+    }
 }

@@ -48,4 +48,21 @@ public class UsuarioController {
         usuarioService.deletar(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{usuarioId}/cursos/{cursoId}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<UsuarioResponse> associarCurso(
+            @PathVariable Long usuarioId,
+            @PathVariable Long cursoId) {
+        return ResponseEntity.ok(usuarioService.associarCurso(usuarioId, cursoId));
+    }
+
+    @DeleteMapping("/{usuarioId}/cursos/{cursoId}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Void> desassociarCurso(
+            @PathVariable Long usuarioId,
+            @PathVariable Long cursoId) {
+        usuarioService.desassociarCurso(usuarioId, cursoId);
+        return ResponseEntity.noContent().build();
+    }
 }
