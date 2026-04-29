@@ -2,11 +2,13 @@ package br.edu.senac.backend.service;
 
 import br.edu.senac.backend.dto.SolicitacaoRequest;
 import br.edu.senac.backend.dto.SolicitacaoResponse;
+import br.edu.senac.backend.model.Certificado;
 import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.Solicitacao;
 import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
+import br.edu.senac.backend.repository.CertificadoRepository;
 import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.SolicitacaoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
@@ -24,6 +26,7 @@ public class SolicitacaoService {
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
     private final EmailService emailService;
+    private final CertificadoRepository certificadoRepository;
 
     public SolicitacaoResponse criar(Long alunoId, SolicitacaoRequest request) {
         Usuario aluno = buscarUsuario(alunoId);
@@ -39,6 +42,12 @@ public class SolicitacaoService {
         solicitacao.setCurso(curso);
 
         solicitacaoRepository.save(solicitacao);
+        Certificado certificado = new Certificado();
+        certificado.setNomeArquivo(request.getUrlCertificado());
+        certificado.setUrlArquivo(request.getUrlCertificado());
+        certificado.setTipoArquivo("IMAGEM");
+        certificado.setSolicitacao(solicitacao);
+        certificadoRepository.save(certificado);
         curso.getUsuarios().stream()
                 .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
                 .forEach(coordenador -> emailService.enviarEmailNovaSolicitacao(
@@ -99,5 +108,30 @@ public class SolicitacaoService {
         response.setDataCriacao(solicitacao.getDataCriacao());
         response.setNomeAluno(solicitacao.getAluno().getNome());
         return response;
+    }
+
+    public List<SolicitacaoResponse> listarPorAlunoEStatus(Long alunoId, StatusSolicitacao status) {
+        buscarUsuario(alunoId);
+        return solicitacaoRepository.findByAlunoIdAndStatus(alunoId, status)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<SolicitacaoResponse> listarPorCursoEStatus(Long cursoId, StatusSolicitacao status) {
+        buscarCurso(cursoId);
+        return solicitacaoRepository.findByCursoIdAndStatus(cursoId, status)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
+    public List<SolicitacaoResponse> listarPorAlunoECurso(Long alunoId, Long cursoId) {
+        buscarUsuario(alunoId);
+        buscarCurso(cursoId);
+        return solicitacaoRepository.findByAlunoIdAndCursoId(alunoId, cursoId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

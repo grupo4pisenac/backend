@@ -9,6 +9,8 @@ import java.util.List;
 public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> {
     List<Solicitacao> findByAlunoId(Long alunoId);
     List<Solicitacao> findByCursoId(Long cursoId);
-
     List<Solicitacao> findByAlunoIdAndCursoIdAndStatus(Long alunoId, Long cursoId, StatusSolicitacao status);
+    List<Solicitacao> findByAlunoIdAndStatus(Long alunoId, StatusSolicitacao status);
+    List<Solicitacao> findByCursoIdAndStatus(Long cursoId, StatusSolicitacao status);
+    List<Solicitacao> findByAlunoIdAndCursoId(Long alunoId, Long cursoId);
 }

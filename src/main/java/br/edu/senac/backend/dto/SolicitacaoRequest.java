@@ -19,4 +19,7 @@ public class SolicitacaoRequest {
 
     @NotNull
     private Long cursoId;
+
+    @NotBlank
+    private String urlCertificado;
 }

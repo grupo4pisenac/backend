@@ -46,4 +46,28 @@ public class SolicitacaoController {
             @RequestParam StatusSolicitacao status) {
         return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status));
     }
+
+    @GetMapping("/aluno/{alunoId}/filtro")
+    @PreAuthorize("hasAnyRole('ALUNO', 'COORDENADOR', 'SUPER_ADMIN')")
+    public ResponseEntity<List<SolicitacaoResponse>> listarPorAlunoEStatus(
+            @PathVariable Long alunoId,
+            @RequestParam StatusSolicitacao status) {
+        return ResponseEntity.ok(solicitacaoService.listarPorAlunoEStatus(alunoId, status));
+    }
+
+    @GetMapping("/curso/{cursoId}/filtro")
+    @PreAuthorize("hasAnyRole('COORDENADOR', 'SUPER_ADMIN')")
+    public ResponseEntity<List<SolicitacaoResponse>> listarPorCursoEStatus(
+            @PathVariable Long cursoId,
+            @RequestParam StatusSolicitacao status) {
+        return ResponseEntity.ok(solicitacaoService.listarPorCursoEStatus(cursoId, status));
+    }
+
+    @GetMapping("/aluno/{alunoId}/curso/{cursoId}")
+    @PreAuthorize("hasAnyRole('ALUNO', 'COORDENADOR', 'SUPER_ADMIN')")
+    public ResponseEntity<List<SolicitacaoResponse>> listarPorAlunoECurso(
+            @PathVariable Long alunoId,
+            @PathVariable Long cursoId) {
+        return ResponseEntity.ok(solicitacaoService.listarPorAlunoECurso(alunoId, cursoId));
+    }
 }
