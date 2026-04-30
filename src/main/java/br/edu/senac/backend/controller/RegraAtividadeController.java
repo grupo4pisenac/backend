@@ -27,7 +27,7 @@ public class RegraAtividadeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR', 'ALUNO')")
     public ResponseEntity<List<RegraAtividadeResponse>> listar(@PathVariable Long cursoId) {
         return ResponseEntity.ok(regraAtividadeService.listarPorCurso(cursoId));
     }

@@ -1,5 +1,6 @@
 package br.edu.senac.backend.service;
 
+import br.edu.senac.backend.dto.CursoResponse;
 import br.edu.senac.backend.dto.UsuarioRequest;
 import br.edu.senac.backend.dto.UsuarioResponse;
 import br.edu.senac.backend.model.Curso;
@@ -87,6 +88,14 @@ public class UsuarioService {
         response.setNome(usuario.getNome());
         response.setEmail(usuario.getEmail());
         response.setPerfil(usuario.getPerfil());
+        response.setCursos(usuario.getCursos().stream()
+                .map(c -> {
+                    CursoResponse cr = new CursoResponse();
+                    cr.setId(c.getId());
+                    cr.setNome(c.getNome());
+                    return cr;
+                })
+                .toList());
         return response;
     }
 

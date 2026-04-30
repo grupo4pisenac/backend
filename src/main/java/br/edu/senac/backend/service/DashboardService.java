@@ -6,12 +6,14 @@ import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.RegraAtividade;
 import br.edu.senac.backend.model.Solicitacao;
 import br.edu.senac.backend.model.Usuario;
+import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
 import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.RegraAtividadeRepository;
 import br.edu.senac.backend.repository.SolicitacaoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -26,6 +28,7 @@ public class DashboardService {
     private final RegraAtividadeRepository regraAtividadeRepository;
 
     public DashboardAlunoResponse dashboardAluno(Long alunoId, Long cursoId) {
+        validarAcessoAluno(alunoId);
         Usuario aluno = usuarioRepository.findById(alunoId)
                 .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
 
@@ -61,5 +64,18 @@ public class DashboardService {
         response.setTotalHorasAprovadas(totalAprovadas);
         response.setTotalHorasExigidas(totalExigidas);
         return response;
+    }
+
+    private Usuario getUsuarioAutenticado() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
+    private void validarAcessoAluno(Long alunoId) {
+        Usuario autenticado = getUsuarioAutenticado();
+        if (autenticado.getPerfil() == PerfilUsuario.ALUNO && !autenticado.getId().equals(alunoId)) {
+            throw new RuntimeException("Acesso negado");
+        }
     }
 }

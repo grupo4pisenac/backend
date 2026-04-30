@@ -25,13 +25,13 @@ public class CursoController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR', 'ALUNO')")
     public ResponseEntity<List<CursoResponse>> listar() {
         return ResponseEntity.ok(cursoService.listar());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR', 'ALUNO')")
     public ResponseEntity<CursoResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(cursoService.buscarPorId(id));
     }

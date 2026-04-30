@@ -6,8 +6,10 @@ import br.edu.senac.backend.service.AuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/auth")
@@ -19,12 +21,5 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody @Valid LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
-    }
-
-    @GetMapping("/teste-senha")
-    public String testeSenha() {
-        BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-        String hash = encoder.encode("password");
-        return hash;
     }
 }

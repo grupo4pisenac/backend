@@ -13,6 +13,7 @@ import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.SolicitacaoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -29,6 +30,7 @@ public class SolicitacaoService {
     private final CertificadoRepository certificadoRepository;
 
     public SolicitacaoResponse criar(Long alunoId, SolicitacaoRequest request) {
+        validarAcessoAluno(alunoId);
         Usuario aluno = buscarUsuario(alunoId);
         Curso curso = buscarCurso(request.getCursoId());
 
@@ -60,6 +62,7 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorAluno(Long alunoId) {
+        validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         return solicitacaoRepository.findByAlunoId(alunoId)
                 .stream()
@@ -111,6 +114,7 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorAlunoEStatus(Long alunoId, StatusSolicitacao status) {
+        validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         return solicitacaoRepository.findByAlunoIdAndStatus(alunoId, status)
                 .stream()
@@ -127,11 +131,25 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorAlunoECurso(Long alunoId, Long cursoId) {
+        validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         buscarCurso(cursoId);
         return solicitacaoRepository.findByAlunoIdAndCursoId(alunoId, cursoId)
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    private Usuario getUsuarioAutenticado() {
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        return usuarioRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
+    private void validarAcessoAluno(Long alunoId) {
+        Usuario autenticado = getUsuarioAutenticado();
+        if (autenticado.getPerfil() == PerfilUsuario.ALUNO && !autenticado.getId().equals(alunoId)) {
+            throw new RuntimeException("Acesso negado");
+        }
     }
 }
