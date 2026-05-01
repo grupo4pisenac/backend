@@ -3,7 +3,11 @@ package br.edu.senac.backend.service;
 import br.edu.senac.backend.dto.CursoRequest;
 import br.edu.senac.backend.dto.CursoResponse;
 import br.edu.senac.backend.model.Curso;
+import br.edu.senac.backend.model.Usuario;
+import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.repository.CursoRepository;
+import br.edu.senac.backend.repository.RegraAtividadeRepository;
+import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,11 +18,24 @@ import java.util.List;
 public class CursoService {
 
     private final CursoRepository cursoRepository;
+    private final UsuarioRepository usuarioRepository;
+    private final RegraAtividadeRepository regraAtividadeRepository;
 
     public CursoResponse criar(CursoRequest request) {
         Curso curso = new Curso();
         curso.setNome(request.getNome());
         cursoRepository.save(curso);
+
+        Usuario coordenador = usuarioRepository.findById(request.getCoordenadorId())
+                .orElseThrow(() -> new RuntimeException("Coordenador não encontrado"));
+
+        if (coordenador.getPerfil() != PerfilUsuario.COORDENADOR) {
+            throw new RuntimeException("Usuário informado não é um coordenador");
+        }
+
+        coordenador.getCursos().add(curso);
+        usuarioRepository.save(coordenador);
+
         return toResponse(curso);
     }
 
@@ -53,6 +70,15 @@ public class CursoService {
         CursoResponse response = new CursoResponse();
         response.setId(curso.getId());
         response.setNome(curso.getNome());
+
+        curso.getUsuarios().stream()
+                .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
+                .findFirst()
+                .ifPresent(coordenador -> {
+                    response.setCoordenadorId(coordenador.getId());
+                    response.setCoordenadorNome(coordenador.getNome());
+                });
+
         return response;
     }
 }
