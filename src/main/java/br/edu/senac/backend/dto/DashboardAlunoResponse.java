@@ -3,7 +3,7 @@ package br.edu.senac.backend.dto;
 import lombok.Data;
 import java.util.List;
 
-@Data // Isto vai criar os métodos setNomeAluno, setNomeCurso, etc.
+@Data
 public class DashboardAlunoResponse {
     private String nomeAluno;
     private String nomeCurso;
