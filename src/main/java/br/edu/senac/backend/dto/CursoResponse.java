@@ -8,4 +8,5 @@ public class CursoResponse {
     private String nome;
     private Long coordenadorId;
     private String coordenadorNome;
+    private Integer totalHorasExigidas;
 }
