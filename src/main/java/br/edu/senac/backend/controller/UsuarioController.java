@@ -38,9 +38,9 @@ public class UsuarioController {
     }
 
     @GetMapping("/coordenadores")
-    public ResponseEntity<List<Usuario>> listarCoordenadores() {
-        List<Usuario> lista = usuarioService.buscarCoordenadores();
-        return ResponseEntity.ok(lista);
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<List<UsuarioResponse>> listarCoordenadores() {
+        return ResponseEntity.ok(usuarioService.listarCoordenadores());
     }
 
     @PutMapping("/{id}")

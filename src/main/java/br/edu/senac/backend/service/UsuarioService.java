@@ -83,8 +83,11 @@ public class UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
-    public List<Usuario> buscarCoordenadores() {
-        return usuarioRepository.findByPerfil(PerfilUsuario.COORDENADOR);
+    public List<UsuarioResponse> listarCoordenadores() {
+        return usuarioRepository.findByPerfil(PerfilUsuario.COORDENADOR)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {
