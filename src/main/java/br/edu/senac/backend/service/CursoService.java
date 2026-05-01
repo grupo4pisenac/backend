@@ -2,6 +2,7 @@ package br.edu.senac.backend.service;
 
 import br.edu.senac.backend.dto.CursoRequest;
 import br.edu.senac.backend.dto.CursoResponse;
+import br.edu.senac.backend.dto.RegraAtividadeResponse;
 import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.RegraAtividade;
 import br.edu.senac.backend.model.Usuario;
@@ -83,6 +84,15 @@ public class CursoService {
         List<RegraAtividade> regras = regraAtividadeRepository.findByCursoId(curso.getId());
         int total = regras.stream().mapToInt(RegraAtividade::getLimiteHoras).sum();
         response.setTotalHorasExigidas(total);
+
+        List<RegraAtividadeResponse> areas = regras.stream().map(regra -> {
+            RegraAtividadeResponse r = new RegraAtividadeResponse();
+            r.setId(regra.getId());
+            r.setArea(regra.getArea());
+            r.setLimiteHoras(regra.getLimiteHoras());
+            return r;
+        }).toList();
+        response.setAreas(areas);
 
         return response;
     }
