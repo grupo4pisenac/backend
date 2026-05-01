@@ -2,6 +2,7 @@ package br.edu.senac.backend.controller;
 
 import br.edu.senac.backend.dto.UsuarioRequest;
 import br.edu.senac.backend.dto.UsuarioResponse;
+import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,12 @@ public class UsuarioController {
     @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
     public ResponseEntity<UsuarioResponse> buscarPorId(@PathVariable Long id) {
         return ResponseEntity.ok(usuarioService.buscarPorId(id));
+    }
+
+    @GetMapping("/coordenadores")
+    public ResponseEntity<List<Usuario>> listarCoordenadores() {
+        List<Usuario> lista = usuarioService.buscarCoordenadores();
+        return ResponseEntity.ok(lista);
     }
 
     @PutMapping("/{id}")

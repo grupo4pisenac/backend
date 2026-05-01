@@ -5,6 +5,7 @@ import br.edu.senac.backend.dto.UsuarioRequest;
 import br.edu.senac.backend.dto.UsuarioResponse;
 import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.Usuario;
+import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -77,9 +78,13 @@ public class UsuarioService {
         usuarioRepository.deleteById(id);
     }
 
-    private Usuario buscarUsuario(Long id) {
+    public Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+    }
+
+    public List<Usuario> buscarCoordenadores() {
+        return usuarioRepository.findByPerfil(PerfilUsuario.COORDENADOR);
     }
 
     private UsuarioResponse toResponse(Usuario usuario) {
