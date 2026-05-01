@@ -14,4 +14,5 @@ public class SolicitacaoResponse {
     private StatusSolicitacao status;
     private LocalDateTime dataCriacao;
     private String nomeAluno;
+    private String urlArquivo;
 }

@@ -110,6 +110,9 @@ public class SolicitacaoService {
         response.setStatus(solicitacao.getStatus());
         response.setDataCriacao(solicitacao.getDataCriacao());
         response.setNomeAluno(solicitacao.getAluno().getNome());
+        if (solicitacao.getCertificado() != null) {
+            response.setUrlArquivo(solicitacao.getCertificado().getUrlArquivo());
+        }
         return response;
     }
 
