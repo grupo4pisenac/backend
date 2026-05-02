@@ -59,6 +59,20 @@ public class CursoService {
                 .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
         curso.setNome(request.getNome());
         cursoRepository.save(curso);
+
+        if (request.getCoordenadorId() != null) {
+            Usuario novoCoord = usuarioRepository.findById(request.getCoordenadorId())
+                    .orElseThrow(() -> new RuntimeException("Coordenador não encontrado"));
+            if (novoCoord.getPerfil() != PerfilUsuario.COORDENADOR) {
+                throw new RuntimeException("Usuário informado não é um coordenador");
+            }
+            curso.getUsuarios().stream()
+                    .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
+                    .forEach(u -> u.getCursos().remove(curso));
+            novoCoord.getCursos().add(curso);
+            usuarioRepository.save(novoCoord);
+        }
+
         return toResponse(curso);
     }
 

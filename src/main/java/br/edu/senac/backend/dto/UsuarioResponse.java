@@ -11,5 +11,5 @@ public class UsuarioResponse {
     private String nome;
     private String email;
     private PerfilUsuario perfil;
-    private List<CursoResponse> cursos;
+    private List<CursoResumoResponse> cursos;
 }
