@@ -51,6 +51,13 @@ public class UsuarioService {
                 .toList();
     }
 
+    public List<UsuarioResponse> listarAlunos() {
+        return usuarioRepository.findByPerfil(PerfilUsuario.ALUNO)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public UsuarioResponse buscarPorId(Long id) {
         return toResponse(buscarUsuario(id));
     }

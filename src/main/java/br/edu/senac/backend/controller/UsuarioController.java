@@ -2,7 +2,6 @@ package br.edu.senac.backend.controller;
 
 import br.edu.senac.backend.dto.UsuarioRequest;
 import br.edu.senac.backend.dto.UsuarioResponse;
-import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.service.UsuarioService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -43,9 +42,21 @@ public class UsuarioController {
         return ResponseEntity.ok(usuarioService.listarCoordenadores());
     }
 
+    @GetMapping("/alunos")
+    @PreAuthorize("hasAnyRole('SUPER_ADMIN', 'COORDENADOR')")
+    public ResponseEntity<List<UsuarioResponse>> listarAlunos() {
+        return ResponseEntity.ok(usuarioService.listarAlunos());
+    }
+
     @PutMapping("/{id}")
     @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<UsuarioResponse> atualizar(@PathVariable Long id, @RequestBody @Valid UsuarioRequest request) {
+        return ResponseEntity.ok(usuarioService.atualizar(id, request));
+    }
+
+    @PutMapping("/alunos/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<UsuarioResponse> atualizarAluno(@PathVariable Long id, @RequestBody @Valid UsuarioRequest request) {
         return ResponseEntity.ok(usuarioService.atualizar(id, request));
     }
 
