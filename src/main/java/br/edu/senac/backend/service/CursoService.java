@@ -66,9 +66,17 @@ public class CursoService {
             if (novoCoord.getPerfil() != PerfilUsuario.COORDENADOR) {
                 throw new RuntimeException("Usuário informado não é um coordenador");
             }
-            curso.getUsuarios().stream()
-                    .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
-                    .forEach(u -> u.getCursos().remove(curso));
+
+            List<Usuario> coordenadoresAtuais = usuarioRepository.findAll().stream()
+                    .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR
+                            && u.getCursos().stream().anyMatch(c -> c.getId().equals(id)))
+                    .toList();
+
+            for (Usuario coordAtual : coordenadoresAtuais) {
+                coordAtual.getCursos().removeIf(c -> c.getId().equals(id));
+                usuarioRepository.save(coordAtual);
+            }
+
             novoCoord.getCursos().add(curso);
             usuarioRepository.save(novoCoord);
         }
