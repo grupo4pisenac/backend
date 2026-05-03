@@ -3,6 +3,7 @@ package br.edu.senac.backend.model;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -19,5 +20,5 @@ public class Curso {
     private List<RegraAtividade> regras;
 
     @ManyToMany(mappedBy = "cursos")
-    private List<Usuario> usuarios;
+    private List<Usuario> usuarios = new ArrayList<>();
 }
