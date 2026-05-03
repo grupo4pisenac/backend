@@ -10,8 +10,10 @@ import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.repository.CursoRepository;
 import br.edu.senac.backend.repository.RegraAtividadeRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
+import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -22,7 +24,9 @@ public class CursoService {
     private final CursoRepository cursoRepository;
     private final UsuarioRepository usuarioRepository;
     private final RegraAtividadeRepository regraAtividadeRepository;
+    private final EntityManager entityManager;
 
+    @Transactional
     public CursoResponse criar(CursoRequest request) {
         Curso curso = new Curso();
         curso.setNome(request.getNome());
@@ -37,6 +41,9 @@ public class CursoService {
 
         coordenador.getCursos().add(curso);
         usuarioRepository.save(coordenador);
+
+        entityManager.flush();
+        entityManager.clear();
 
         Curso cursoAtualizado = cursoRepository.findById(curso.getId())
                 .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
@@ -56,6 +63,7 @@ public class CursoService {
         return toResponse(curso);
     }
 
+    @Transactional
     public CursoResponse atualizar(Long id, CursoRequest request) {
         Curso curso = cursoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
@@ -81,6 +89,9 @@ public class CursoService {
 
             novoCoord.getCursos().add(curso);
             usuarioRepository.save(novoCoord);
+
+            entityManager.flush();
+            entityManager.clear();
         }
 
         Curso cursoAtualizado = cursoRepository.findById(id)
