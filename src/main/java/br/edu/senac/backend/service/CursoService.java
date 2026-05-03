@@ -38,7 +38,9 @@ public class CursoService {
         coordenador.getCursos().add(curso);
         usuarioRepository.save(coordenador);
 
-        return toResponse(curso);
+        Curso cursoAtualizado = cursoRepository.findById(curso.getId())
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+        return toResponse(cursoAtualizado);
     }
 
     public List<CursoResponse> listar() {
@@ -81,7 +83,9 @@ public class CursoService {
             usuarioRepository.save(novoCoord);
         }
 
-        return toResponse(curso);
+        Curso cursoAtualizado = cursoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+        return toResponse(cursoAtualizado);
     }
 
     public void deletar(Long id) {
