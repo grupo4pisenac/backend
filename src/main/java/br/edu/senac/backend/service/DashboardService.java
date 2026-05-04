@@ -13,11 +13,13 @@ import br.edu.senac.backend.repository.RegraAtividadeRepository;
 import br.edu.senac.backend.repository.SolicitacaoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class DashboardService {
@@ -28,15 +30,25 @@ public class DashboardService {
     private final RegraAtividadeRepository regraAtividadeRepository;
 
     public DashboardAlunoResponse dashboardAluno(Long alunoId, Long cursoId) {
+        log.info("Carregando dashboard alunoId={}, cursoId={}", alunoId, cursoId);
         validarAcessoAluno(alunoId);
+
         Usuario aluno = usuarioRepository.findById(alunoId)
-                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Aluno não encontrado id={}", alunoId);
+                    return new RuntimeException("Aluno não encontrado");
+                });
 
         Curso curso = cursoRepository.findById(cursoId)
-                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Curso não encontrado id={}", cursoId);
+                    return new RuntimeException("Curso não encontrado");
+                });
 
         List<Solicitacao> aprovadas = solicitacaoRepository
                 .findByAlunoIdAndCursoIdAndStatus(alunoId, cursoId, StatusSolicitacao.APROVADA);
+
+        log.debug("Total de solicitações aprovadas para alunoId={}, cursoId={}: {}", alunoId, cursoId, aprovadas.size());
 
         List<RegraAtividade> regras = regraAtividadeRepository.findByCursoId(cursoId);
 
@@ -53,6 +65,9 @@ public class DashboardService {
                     .mapToInt(Solicitacao::getHorasSolicitadas)
                     .sum();
 
+            log.debug("Área={} | horasAprovadas={} | horasAprovadasSemestre={} | limiteHoras={} | limiteSemestral={}",
+                    regra.getArea(), horasAprovadas, horasAprovadasSemestre, regra.getLimiteHoras(), regra.getLimiteSemestral());
+
             AreaProgressoDTO dto = new AreaProgressoDTO();
             dto.setArea(regra.getArea());
             dto.setLimiteHoras(regra.getLimiteHoras());
@@ -67,6 +82,8 @@ public class DashboardService {
         int totalAprovadas = areas.stream().mapToInt(AreaProgressoDTO::getHorasAprovadas).sum();
         int totalExigidas = regras.stream().mapToInt(RegraAtividade::getLimiteHoras).sum();
 
+        log.info("Dashboard carregado para alunoId={} | totalAprovadas={} | totalExigidas={}", alunoId, totalAprovadas, totalExigidas);
+
         DashboardAlunoResponse response = new DashboardAlunoResponse();
         response.setNomeAluno(aluno.getNome());
         response.setNomeCurso(curso.getNome());
@@ -79,12 +96,16 @@ public class DashboardService {
     private Usuario getUsuarioAutenticado() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Usuário autenticado não encontrado email={}", email);
+                    return new RuntimeException("Usuário não encontrado");
+                });
     }
 
     private void validarAcessoAluno(Long alunoId) {
         Usuario autenticado = getUsuarioAutenticado();
         if (autenticado.getPerfil() == PerfilUsuario.ALUNO && !autenticado.getId().equals(alunoId)) {
+            log.warn("Acesso negado: alunoAutenticado={} tentou acessar dashboard de alunoId={}", autenticado.getId(), alunoId);
             throw new RuntimeException("Acesso negado");
         }
     }

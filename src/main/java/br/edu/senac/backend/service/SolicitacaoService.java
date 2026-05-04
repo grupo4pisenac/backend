@@ -10,12 +10,14 @@ import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
 import br.edu.senac.backend.repository.*;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SolicitacaoService {
@@ -28,6 +30,7 @@ public class SolicitacaoService {
     private final RegraAtividadeRepository regraAtividadeRepository;
 
     public SolicitacaoResponse criar(Long alunoId, SolicitacaoRequest request) {
+        log.info("Criando solicitação alunoId={}, area={}, horasSolicitadas={}", alunoId, request.getArea(), request.getHorasSolicitadas());
         validarAcessoAluno(alunoId);
         Usuario aluno = buscarUsuario(alunoId);
         Curso curso = buscarCurso(request.getCursoId());
@@ -43,24 +46,32 @@ public class SolicitacaoService {
         solicitacao.setSemestre(aluno.getSemestreAtual());
 
         solicitacaoRepository.save(solicitacao);
+        log.debug("Solicitação salva id={}, semestre={}", solicitacao.getId(), solicitacao.getSemestre());
+
         Certificado certificado = new Certificado();
         certificado.setNomeArquivo(request.getUrlCertificado());
         certificado.setUrlArquivo(request.getUrlCertificado());
         certificado.setTipoArquivo("IMAGEM");
         certificado.setSolicitacao(solicitacao);
         certificadoRepository.save(certificado);
+
         curso.getUsuarios().stream()
                 .filter(u -> u.getPerfil() == PerfilUsuario.COORDENADOR)
-                .forEach(coordenador -> emailService.enviarEmailNovaSolicitacao(
-                        coordenador.getEmail(),
-                        aluno.getNome(),
-                        solicitacao.getArea()
-                ));
+                .forEach(coordenador -> {
+                    log.debug("Notificando coordenador={} sobre nova solicitação", coordenador.getEmail());
+                    emailService.enviarEmailNovaSolicitacao(
+                            coordenador.getEmail(),
+                            aluno.getNome(),
+                            solicitacao.getArea()
+                    );
+                });
 
+        log.info("Solicitação criada com sucesso id={}", solicitacao.getId());
         return toResponse(solicitacao);
     }
 
     public List<SolicitacaoResponse> listarPorAluno(Long alunoId) {
+        log.debug("Listando solicitações do alunoId={}", alunoId);
         validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         return solicitacaoRepository.findByAlunoId(alunoId)
@@ -70,6 +81,7 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorCurso(Long cursoId) {
+        log.debug("Listando solicitações do cursoId={}", cursoId);
         buscarCurso(cursoId);
         return solicitacaoRepository.findByCursoId(cursoId)
                 .stream()
@@ -78,15 +90,19 @@ public class SolicitacaoService {
     }
 
     public SolicitacaoResponse atualizarStatus(Long id, StatusSolicitacao novoStatus) {
+        log.info("Atualizando status da solicitação id={} para {}", id, novoStatus);
+
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+                .orElseThrow(() -> {
+                    log.error("Solicitação não encontrada id={}", id);
+                    return new RuntimeException("Solicitação não encontrada");
+                });
 
         if (novoStatus == StatusSolicitacao.APROVADA) {
             regraAtividadeRepository.findByCursoId(solicitacao.getCurso().getId()).stream()
                     .filter(r -> r.getArea().equalsIgnoreCase(solicitacao.getArea()))
                     .findFirst()
                     .ifPresent(regra -> {
-                        // Soma horas já aprovadas no semestre (excluindo a atual)
                         int horasJaAprovadas = solicitacaoRepository
                                 .findByAlunoIdAndCursoIdAndStatus(
                                         solicitacao.getAluno().getId(),
@@ -101,19 +117,23 @@ public class SolicitacaoService {
                                 .sum();
 
                         int horasRestantes = regra.getLimiteSemestral() - horasJaAprovadas;
-
-                        int horasAprovadas = Math.max(0, Math.min(solicitacao.getHorasSolicitadas(), horasRestantes));
+                        int horasOriginais = solicitacao.getHorasSolicitadas();
+                        int horasAprovadas = Math.max(0, Math.min(horasOriginais, horasRestantes));
                         solicitacao.setHorasSolicitadas(horasAprovadas);
 
-                        // Notifica se ultrapassou
-                        int totalComAtual = horasJaAprovadas + solicitacao.getHorasSolicitadas();
-                        if (totalComAtual > regra.getLimiteSemestral() || horasAprovadas < solicitacao.getHorasSolicitadas()) {
+                        log.debug("Cálculo semestral: area={}, horasJaAprovadas={}, horasRestantes={}, horasOriginais={}, horasAprovadas={}",
+                                regra.getArea(), horasJaAprovadas, horasRestantes, horasOriginais, horasAprovadas);
+
+                        int totalComAtual = horasJaAprovadas + horasAprovadas;
+                        if (totalComAtual > regra.getLimiteSemestral() || horasAprovadas < horasOriginais) {
+                            log.warn("Limite semestral atingido: alunoId={}, area={}, semestre={}, total={}h, limite={}h",
+                                    solicitacao.getAluno().getId(), regra.getArea(), solicitacao.getSemestre(), totalComAtual, regra.getLimiteSemestral());
                             emailService.enviarEmailLimiteSemestralUltrapassado(
                                     solicitacao.getAluno().getEmail(),
                                     solicitacao.getAluno().getNome(),
                                     solicitacao.getArea(),
                                     solicitacao.getSemestre(),
-                                    horasJaAprovadas + horasAprovadas,
+                                    totalComAtual,
                                     regra.getLimiteSemestral()
                             );
                         }
@@ -122,6 +142,7 @@ public class SolicitacaoService {
 
         solicitacao.setStatus(novoStatus);
         solicitacaoRepository.save(solicitacao);
+        log.info("Status da solicitação id={} atualizado para {} com horasSolicitadas={}", id, novoStatus, solicitacao.getHorasSolicitadas());
 
         emailService.enviarEmailStatusAtualizado(
                 solicitacao.getAluno().getEmail(),
@@ -134,12 +155,18 @@ public class SolicitacaoService {
 
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Usuário não encontrado id={}", id);
+                    return new RuntimeException("Usuário não encontrado");
+                });
     }
 
     private Curso buscarCurso(Long id) {
         return cursoRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Curso não encontrado id={}", id);
+                    return new RuntimeException("Curso não encontrado");
+                });
     }
 
     private SolicitacaoResponse toResponse(Solicitacao solicitacao) {
@@ -154,13 +181,12 @@ public class SolicitacaoService {
         if (solicitacao.getCertificado() != null) {
             response.setUrlArquivo(solicitacao.getCertificado().getUrlArquivo());
         }
-
         response.setSemestre(solicitacao.getSemestre());
-
         return response;
     }
 
     public List<SolicitacaoResponse> listarPorAlunoEStatus(Long alunoId, StatusSolicitacao status) {
+        log.debug("Listando solicitações alunoId={}, status={}", alunoId, status);
         validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         return solicitacaoRepository.findByAlunoIdAndStatus(alunoId, status)
@@ -170,6 +196,7 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorCursoEStatus(Long cursoId, StatusSolicitacao status) {
+        log.debug("Listando solicitações cursoId={}, status={}", cursoId, status);
         buscarCurso(cursoId);
         return solicitacaoRepository.findByCursoIdAndStatus(cursoId, status)
                 .stream()
@@ -178,6 +205,7 @@ public class SolicitacaoService {
     }
 
     public List<SolicitacaoResponse> listarPorAlunoECurso(Long alunoId, Long cursoId) {
+        log.debug("Listando solicitações alunoId={}, cursoId={}", alunoId, cursoId);
         validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         buscarCurso(cursoId);
@@ -190,12 +218,16 @@ public class SolicitacaoService {
     private Usuario getUsuarioAutenticado() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Usuário autenticado não encontrado email={}", email);
+                    return new RuntimeException("Usuário não encontrado");
+                });
     }
 
     private void validarAcessoAluno(Long alunoId) {
         Usuario autenticado = getUsuarioAutenticado();
         if (autenticado.getPerfil() == PerfilUsuario.ALUNO && !autenticado.getId().equals(alunoId)) {
+            log.warn("Acesso negado: alunoAutenticado={} tentou acessar dados de alunoId={}", autenticado.getId(), alunoId);
             throw new RuntimeException("Acesso negado");
         }
     }

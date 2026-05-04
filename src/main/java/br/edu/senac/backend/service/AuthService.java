@@ -6,11 +6,13 @@ import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import br.edu.senac.backend.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class AuthService {
@@ -21,14 +23,21 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public LoginResponse login(LoginRequest request) {
+        log.info("Tentativa de login para email={}", request.getEmail());
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getSenha())
         );
 
         Usuario usuario = usuarioRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
+                .orElseThrow(() -> {
+                    log.error("Usuário não encontrado para email={}", request.getEmail());
+                    return new RuntimeException("Usuário não encontrado");
+                });
 
         String token = jwtService.gerarToken(usuario);
+
+        log.info("Login realizado com sucesso para email={}, perfil={}", usuario.getEmail(), usuario.getPerfil());
 
         LoginResponse response = new LoginResponse();
         response.setToken(token);
