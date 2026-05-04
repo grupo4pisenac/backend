@@ -18,6 +18,7 @@ public class Solicitacao {
     private String area;
     private Integer horasSolicitadas;
     private LocalDateTime dataCriacao;
+    private Integer semestre;
 
     @Enumerated(EnumType.STRING)
     private StatusSolicitacao status;

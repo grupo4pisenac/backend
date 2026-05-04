@@ -12,4 +12,5 @@ public class UsuarioResponse {
     private String email;
     private PerfilUsuario perfil;
     private List<CursoResumoResponse> cursos;
+    private Integer semestreAtual;
 }

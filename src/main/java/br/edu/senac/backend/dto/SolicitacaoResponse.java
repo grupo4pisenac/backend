@@ -15,4 +15,5 @@ public class SolicitacaoResponse {
     private LocalDateTime dataCriacao;
     private String nomeAluno;
     private String urlArquivo;
+    private Integer semestre;
 }

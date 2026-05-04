@@ -26,6 +26,7 @@ public class Usuario implements UserDetails {
     private String nome;
     private String email;
     private String senha;
+    private Integer semestreAtual;
 
     @Enumerated(EnumType.STRING)
     private PerfilUsuario perfil;

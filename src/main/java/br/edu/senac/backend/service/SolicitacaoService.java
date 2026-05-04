@@ -8,10 +8,7 @@ import br.edu.senac.backend.model.Solicitacao;
 import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
-import br.edu.senac.backend.repository.CertificadoRepository;
-import br.edu.senac.backend.repository.CursoRepository;
-import br.edu.senac.backend.repository.SolicitacaoRepository;
-import br.edu.senac.backend.repository.UsuarioRepository;
+import br.edu.senac.backend.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -28,6 +25,7 @@ public class SolicitacaoService {
     private final UsuarioRepository usuarioRepository;
     private final EmailService emailService;
     private final CertificadoRepository certificadoRepository;
+    private final RegraAtividadeRepository regraAtividadeRepository;
 
     public SolicitacaoResponse criar(Long alunoId, SolicitacaoRequest request) {
         validarAcessoAluno(alunoId);
@@ -42,6 +40,7 @@ public class SolicitacaoService {
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setAluno(aluno);
         solicitacao.setCurso(curso);
+        solicitacao.setSemestre(aluno.getSemestreAtual());
 
         solicitacaoRepository.save(solicitacao);
         Certificado certificado = new Certificado();
@@ -81,13 +80,55 @@ public class SolicitacaoService {
     public SolicitacaoResponse atualizarStatus(Long id, StatusSolicitacao novoStatus) {
         Solicitacao solicitacao = solicitacaoRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Solicitação não encontrada"));
+
+        if (novoStatus == StatusSolicitacao.APROVADA) {
+            regraAtividadeRepository.findByCursoId(solicitacao.getCurso().getId()).stream()
+                    .filter(r -> r.getArea().equalsIgnoreCase(solicitacao.getArea()))
+                    .findFirst()
+                    .ifPresent(regra -> {
+                        // Soma horas já aprovadas no semestre (excluindo a atual)
+                        int horasJaAprovadas = solicitacaoRepository
+                                .findByAlunoIdAndCursoIdAndStatus(
+                                        solicitacao.getAluno().getId(),
+                                        solicitacao.getCurso().getId(),
+                                        StatusSolicitacao.APROVADA)
+                                .stream()
+                                .filter(s -> !s.getId().equals(solicitacao.getId())
+                                        && s.getArea().equalsIgnoreCase(solicitacao.getArea())
+                                        && solicitacao.getSemestre() != null
+                                        && solicitacao.getSemestre().equals(s.getSemestre()))
+                                .mapToInt(Solicitacao::getHorasSolicitadas)
+                                .sum();
+
+                        int horasRestantes = regra.getLimiteSemestral() - horasJaAprovadas;
+
+                        int horasAprovadas = Math.max(0, Math.min(solicitacao.getHorasSolicitadas(), horasRestantes));
+                        solicitacao.setHorasSolicitadas(horasAprovadas);
+
+                        // Notifica se ultrapassou
+                        int totalComAtual = horasJaAprovadas + solicitacao.getHorasSolicitadas();
+                        if (totalComAtual > regra.getLimiteSemestral() || horasAprovadas < solicitacao.getHorasSolicitadas()) {
+                            emailService.enviarEmailLimiteSemestralUltrapassado(
+                                    solicitacao.getAluno().getEmail(),
+                                    solicitacao.getAluno().getNome(),
+                                    solicitacao.getArea(),
+                                    solicitacao.getSemestre(),
+                                    horasJaAprovadas + horasAprovadas,
+                                    regra.getLimiteSemestral()
+                            );
+                        }
+                    });
+        }
+
         solicitacao.setStatus(novoStatus);
         solicitacaoRepository.save(solicitacao);
+
         emailService.enviarEmailStatusAtualizado(
                 solicitacao.getAluno().getEmail(),
                 solicitacao.getAluno().getNome(),
                 novoStatus
         );
+
         return toResponse(solicitacao);
     }
 
@@ -113,6 +154,9 @@ public class SolicitacaoService {
         if (solicitacao.getCertificado() != null) {
             response.setUrlArquivo(solicitacao.getCertificado().getUrlArquivo());
         }
+
+        response.setSemestre(solicitacao.getSemestre());
+
         return response;
     }
 

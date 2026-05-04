@@ -46,11 +46,21 @@ public class DashboardService {
                     .mapToInt(Solicitacao::getHorasSolicitadas)
                     .sum();
 
+            int horasAprovadasSemestre = aprovadas.stream()
+                    .filter(s -> s.getArea().equalsIgnoreCase(regra.getArea())
+                            && s.getSemestre() != null
+                            && s.getSemestre().equals(aluno.getSemestreAtual()))
+                    .mapToInt(Solicitacao::getHorasSolicitadas)
+                    .sum();
+
             AreaProgressoDTO dto = new AreaProgressoDTO();
             dto.setArea(regra.getArea());
-            dto.setHorasAprovadas(horasAprovadas);
             dto.setLimiteHoras(regra.getLimiteHoras());
+            dto.setHorasAprovadas(horasAprovadas);
             dto.setConcluido(horasAprovadas >= regra.getLimiteHoras());
+            dto.setLimiteSemestral(regra.getLimiteSemestral());
+            dto.setHorasAprovadasSemestre(horasAprovadasSemestre);
+            dto.setConcluidoSemestre(horasAprovadasSemestre >= regra.getLimiteSemestral());
             return dto;
         }).toList();
 

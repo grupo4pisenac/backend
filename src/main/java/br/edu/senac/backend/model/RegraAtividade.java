@@ -14,7 +14,12 @@ public class RegraAtividade {
     private String area;
     private Integer limiteHoras;
 
+    @Column(name = "limite_horas_semestral")
+    private Integer limiteSemestral;
+
     @ManyToOne
     @JoinColumn(name = "curso_id")
     private Curso curso;
+
+
 }

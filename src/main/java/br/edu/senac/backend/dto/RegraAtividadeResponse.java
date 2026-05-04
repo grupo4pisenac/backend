@@ -7,4 +7,5 @@ public class RegraAtividadeResponse {
     private Long id;
     private String area;
     private Integer limiteHoras;
+    private Integer limiteSemestral;
 }

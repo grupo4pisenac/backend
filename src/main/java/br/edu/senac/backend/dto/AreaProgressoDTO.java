@@ -8,4 +8,7 @@ public class AreaProgressoDTO {
     private boolean concluido;
     private Integer horasAprovadas;
     private String area;
+    private Integer limiteSemestral;
+    private Integer horasAprovadasSemestre;
+    private Boolean concluidoSemestre;
 }

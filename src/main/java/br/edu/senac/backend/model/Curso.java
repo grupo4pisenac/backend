@@ -16,6 +16,8 @@ public class Curso {
 
     private String nome;
 
+    private Integer totalSemestres;
+
     @OneToMany(mappedBy = "curso")
     private List<RegraAtividade> regras;
 

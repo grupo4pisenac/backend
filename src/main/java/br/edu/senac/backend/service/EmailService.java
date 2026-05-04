@@ -28,4 +28,15 @@ public class EmailService {
         mensagem.setText("Olá " + nomeAluno + ", sua solicitação foi " + textoStatus + ". Acesse o sistema para mais detalhes.");
         mailSender.send(mensagem);
     }
+
+    public void enviarEmailLimiteSemestralUltrapassado(String emailAluno, String nomeAluno, String area, Integer semestre, int horasAprovadas, int limiteSemestral) {
+        SimpleMailMessage mensagem = new SimpleMailMessage();
+        mensagem.setTo(emailAluno);
+        mensagem.setSubject("Limite semestral de horas atingido - " + area);
+        mensagem.setText("Olá " + nomeAluno + ", suas horas aprovadas na área de " + area +
+                " no semestre " + semestre + " totalizam " + horasAprovadas + "h, " +
+                "ultrapassando o limite semestral de " + limiteSemestral + "h. " +
+                "Acesse o sistema para mais detalhes.");
+        mailSender.send(mensagem);
+    }
 }

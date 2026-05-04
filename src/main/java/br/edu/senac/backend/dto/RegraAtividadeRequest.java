@@ -13,4 +13,8 @@ public class RegraAtividadeRequest {
     @NotNull
     @Min(1)
     private Integer limiteHoras;
+
+    @NotNull
+    @Min(1)
+    private Integer limiteSemestral;
 }

@@ -103,6 +103,7 @@ public class UsuarioService {
         response.setNome(usuario.getNome());
         response.setEmail(usuario.getEmail());
         response.setPerfil(usuario.getPerfil());
+        response.setSemestreAtual(usuario.getSemestreAtual());
         response.setCursos(usuario.getCursos().stream()
                 .map(c -> {
                     CursoResumoResponse cr = new CursoResumoResponse();
