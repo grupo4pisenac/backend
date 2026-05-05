@@ -36,6 +36,7 @@ public class RegraAtividadeService {
         RegraAtividade regra = new RegraAtividade();
         regra.setArea(request.getArea());
         regra.setLimiteHoras(request.getLimiteHoras());
+        regra.setLimiteSemestral(request.getLimiteSemestral() != null ? request.getLimiteSemestral() : 0);
         regra.setCurso(curso);
 
         regraAtividadeRepository.save(regra);
@@ -78,6 +79,7 @@ public class RegraAtividadeService {
 
         regra.setArea(request.getArea());
         regra.setLimiteHoras(request.getLimiteHoras());
+        regra.setLimiteSemestral(request.getLimiteSemestral() != null ? request.getLimiteSemestral() : regra.getLimiteSemestral());
 
         regraAtividadeRepository.save(regra);
         log.info("Regra id={} atualizada com sucesso", regraId);

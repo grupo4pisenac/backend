@@ -38,6 +38,7 @@ public class UsuarioService {
         usuario.setEmail(request.getEmail());
         usuario.setSenha(passwordEncoder.encode(request.getSenha()));
         usuario.setPerfil(request.getPerfil());
+        usuario.setSemestreAtual(request.getSemestreAtual() != null ? request.getSemestreAtual() : 1);
         usuario.setCursos(new ArrayList<>());
 
         if (request.getCursoIds() != null && !request.getCursoIds().isEmpty()) {
@@ -81,6 +82,10 @@ public class UsuarioService {
         if (request.getSenha() != null && !request.getSenha().isBlank()) {
             usuario.setSenha(passwordEncoder.encode(request.getSenha()));
             log.debug("Senha atualizada para usuário id={}", id);
+        }
+
+        if (request.getSemestreAtual() != null) {
+            usuario.setSemestreAtual(request.getSemestreAtual());
         }
 
         if (request.getCursoIds() != null) {
