@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -14,6 +15,7 @@ public class EmailService {
 
     private final JavaMailSender mailSender;
 
+    @Async
     public void enviarEmailNovaSolicitacao(String emailCoordenador, String nomeAluno, String area) {
         log.info("Enviando email de nova solicitação para coordenador={}, aluno={}, area={}", emailCoordenador, nomeAluno, area);
         try {
@@ -28,6 +30,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void enviarEmailStatusAtualizado(String emailAluno, String nomeAluno, StatusSolicitacao status) {
         log.info("Enviando email de status atualizado para aluno={}, status={}", emailAluno, status);
         try {
@@ -43,6 +46,7 @@ public class EmailService {
         }
     }
 
+    @Async
     public void enviarEmailLimiteSemestralUltrapassado(String emailAluno, String nomeAluno, String area, Integer semestre, int horasAprovadas, int limiteSemestral) {
         log.info("Enviando email de limite semestral para aluno={}, area={}, semestre={}, horasAprovadas={}, limiteSemestral={}",
                 emailAluno, area, semestre, horasAprovadas, limiteSemestral);
