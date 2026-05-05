@@ -130,6 +130,7 @@ public class CursoService {
         return toResponse(cursoAtualizado);
     }
 
+    @Transactional
     public void deletar(Long id) {
         log.info("Deletando curso id={}", id);
         cursoRepository.findById(id)
@@ -137,6 +138,15 @@ public class CursoService {
                     log.error("Curso não encontrado id={}", id);
                     return new RuntimeException("Curso não encontrado");
                 });
+
+        List<Usuario> usuarios = usuarioRepository.findAll().stream()
+                .filter(u -> u.getCursos().stream().anyMatch(c -> c.getId().equals(id)))
+                .toList();
+        for (Usuario u : usuarios) {
+            u.getCursos().removeIf(c -> c.getId().equals(id));
+            usuarioRepository.save(u);
+        }
+
         cursoRepository.deleteById(id);
         log.info("Curso id={} deletado com sucesso", id);
     }
