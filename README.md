@@ -35,7 +35,7 @@ Antes de rodar o projeto localmente, certifique-se de ter instalado:
 CREATE DATABASE senac_pi_4;
 ```
 
-3. Suba o projeto uma vez — o Flyway criará as tabelas e populará automaticamente com os dados do seed (migrations V1 a V7)
+3. Suba o projeto uma vez — o Flyway criará as tabelas e populará automaticamente com os dados do seed (migrations V1 a V11)
 
 4. O seed já inclui um super admin com as seguintes credenciais:
 
@@ -48,12 +48,13 @@ CREATE DATABASE senac_pi_4;
 
 > Caso precise inserir o admin manualmente, use o hash abaixo (válido para a senha `password`):
 > ```sql
-> INSERT INTO usuarios (nome, email, senha, perfil)
+> INSERT INTO usuarios (nome, email, senha, perfil, semestre_atual)
 > VALUES (
 >     'Admin',
 >     'admin@senac.com',
 >     '$2b$10$vSqYzehzYDJ99xjLYjYP5ehg3/k4r/OeBRmOZzISEVfauAeDPdzIe',
->     'SUPER_ADMIN'
+>     'SUPER_ADMIN',
+>     1
 > );
 > ```
 
@@ -82,7 +83,7 @@ MAIL_USERNAME=seu_username_mailtrap
 MAIL_PASSWORD=sua_password_mailtrap
 ```
 
-> O arquivo `.env` já está no `.gitignore` e nunca será enviado ao repositório.
+> ⚠️ O arquivo `.env` está no `.gitignore` e **nunca deve ser commitado**. Ele contém credenciais sensíveis.
 
 ---
 
@@ -103,6 +104,24 @@ MAIL_PASSWORD=sua_password_mailtrap
 ```
 
 A API estará disponível em `http://localhost:8080`
+
+---
+
+## Documentação interativa — Swagger UI
+
+O projeto possui documentação interativa gerada automaticamente via SpringDoc OpenAPI.
+
+Acesse após subir o projeto:
+
+```
+http://localhost:8080/swagger-ui/index.html
+```
+
+Em produção:
+
+```
+https://backend-production-a784.up.railway.app/swagger-ui/index.html
+```
 
 ---
 
@@ -139,21 +158,22 @@ A API estará disponível em `http://localhost:8080`
     "senha": "password"
 }
 ```
-Retorna o token JWT e o perfil do usuário.
+Retorna o token JWT, o perfil e o nome do usuário.
 
 ---
 
-### Cursos — requer perfil SUPER_ADMIN, COORDENADOR ou ALUNO (somente leitura para ALUNO)
+### Cursos
 
 #### POST /cursos — SUPER_ADMIN
 ```json
 {
-    "nome": "Engenharia de Software"
+    "nome": "Engenharia de Software",
+    "coordenadorId": 2
 }
 ```
 
 #### GET /cursos — SUPER_ADMIN, COORDENADOR, ALUNO
-Retorna a lista de todos os cursos.
+Retorna a lista de todos os cursos com coordenador e áreas.
 
 #### GET /cursos/{id} — SUPER_ADMIN, COORDENADOR, ALUNO
 Retorna um curso pelo ID.
@@ -161,16 +181,20 @@ Retorna um curso pelo ID.
 #### PUT /cursos/{id} — SUPER_ADMIN
 ```json
 {
-    "nome": "Novo Nome do Curso"
+    "nome": "Novo Nome do Curso",
+    "coordenadorId": 3
 }
 ```
 
 #### DELETE /cursos/{id} — SUPER_ADMIN
+
 Remove o curso pelo ID.
+
+> ⚠️ **Atenção:** ao deletar um curso, todas as regras de atividade e solicitações vinculadas serão removidas permanentemente em cascata.
 
 ---
 
-### Usuários — requer perfil SUPER_ADMIN ou COORDENADOR
+### Usuários
 
 #### POST /usuarios — SUPER_ADMIN, COORDENADOR
 ```json
@@ -178,14 +202,15 @@ Remove o curso pelo ID.
     "nome": "Nome do Usuário",
     "email": "email@exemplo.com",
     "senha": "senha123",
-    "perfil": "COORDENADOR",
-    "cursoIds": [1]
+    "perfil": "ALUNO",
+    "cursoIds": [1],
+    "semestreAtual": 1
 }
 ```
 > Perfis disponíveis: `SUPER_ADMIN`, `COORDENADOR`, `ALUNO`
 
 #### GET /usuarios — SUPER_ADMIN, COORDENADOR
-Retorna a lista de todos os usuários incluindo os cursos vinculados.
+Retorna todos os usuários com cursos vinculados e semestre atual.
 
 #### GET /usuarios/alunos — SUPER_ADMIN, COORDENADOR
 Retorna apenas os usuários com perfil `ALUNO`.
@@ -194,36 +219,26 @@ Retorna apenas os usuários com perfil `ALUNO`.
 Retorna apenas os usuários com perfil `COORDENADOR`.
 
 #### GET /usuarios/{id} — SUPER_ADMIN, COORDENADOR
-Retorna um usuário pelo ID incluindo os cursos vinculados.
+Retorna um usuário pelo ID.
 
 #### PUT /usuarios/{id} — SUPER_ADMIN
-Edição geral de qualquer usuário (coordenadores, admin).
-```json
-{
-    "nome": "Nome Atualizado",
-    "email": "email@exemplo.com",
-    "senha": "",
-    "perfil": "COORDENADOR",
-    "cursoIds": [1, 2]
-}
-```
-> Deixe `senha` vazia para não alterar a senha atual.
-
-#### PUT /usuarios/alunos/{id} — SUPER_ADMIN
-Edição específica de um aluno pelo ID.
 ```json
 {
     "nome": "Nome Atualizado",
     "email": "email@exemplo.com",
     "senha": "",
     "perfil": "ALUNO",
-    "cursoIds": [1]
+    "cursoIds": [1],
+    "semestreAtual": 2
 }
 ```
 > Deixe `senha` vazia para não alterar a senha atual.
 
 #### DELETE /usuarios/{id} — SUPER_ADMIN
+
 Remove o usuário pelo ID.
+
+> ⚠️ **Atenção:** ao deletar um aluno, todas as solicitações vinculadas a ele serão removidas permanentemente em cascata.
 
 #### POST /usuarios/{usuarioId}/cursos/{cursoId} — SUPER_ADMIN
 Associa um usuário a um curso.
@@ -239,23 +254,25 @@ Desassocia um usuário de um curso.
 ```json
 {
     "area": "Extensão",
-    "limiteHoras": 60
+    "limiteHoras": 60,
+    "limiteSemestral": 20
 }
 ```
 
 #### GET /cursos/{cursoId}/regras — SUPER_ADMIN, COORDENADOR, ALUNO
-Retorna todas as regras do curso.
+Retorna todas as regras do curso com `limiteHoras` e `limiteSemestral`.
 
 #### PUT /cursos/{cursoId}/regras/{regraId} — SUPER_ADMIN
 ```json
 {
     "area": "Extensão",
-    "limiteHoras": 80
+    "limiteHoras": 80,
+    "limiteSemestral": 25
 }
 ```
 
 #### DELETE /cursos/{cursoId}/regras/{regraId} — SUPER_ADMIN
-Remove a regra pelo ID.
+Remove a regra pelo ID diretamente, sem necessidade de desacoplamento.
 
 ---
 
@@ -271,11 +288,11 @@ Remove a regra pelo ID.
     "urlCertificado": "https://i.imgur.com/exemplo.jpg"
 }
 ```
-> O campo `urlCertificado` deve conter o link público da imagem do certificado (ex: Imgur).
+> O semestre é preenchido automaticamente com o `semestreAtual` do aluno.
 > Ao criar uma solicitação, o sistema envia automaticamente um e-mail para os coordenadores do curso.
 
 #### GET /solicitacoes/aluno/{alunoId} — ALUNO, COORDENADOR, SUPER_ADMIN
-Retorna todas as solicitações do aluno incluindo a `urlArquivo` do certificado.
+Retorna todas as solicitações do aluno incluindo `urlArquivo` e `semestre`.
 
 #### GET /solicitacoes/aluno/{alunoId}/curso/{cursoId} — ALUNO, COORDENADOR, SUPER_ADMIN
 Retorna todas as solicitações do aluno em um curso específico.
@@ -292,15 +309,16 @@ Retorna as solicitações do curso filtradas por status.
 #### PATCH /solicitacoes/{id}/status?status=APROVADA — COORDENADOR, SUPER_ADMIN
 > Status disponíveis: `PENDENTE`, `APROVADA`, `REPROVADA`
 >
-> Ao atualizar o status, o sistema envia automaticamente um e-mail para o aluno informando o resultado.
+> Ao aprovar, o sistema valida o limite semestral da área. Se ultrapassado, as horas são ajustadas automaticamente e um e-mail é enviado ao aluno.
+> O aluno também recebe um e-mail informando o resultado independente do status.
 
 ---
 
-### Dashboard — ALUNO, COORDENADOR, SUPER_ADMIN
+### Dashboard
 
-#### GET /dashboard/aluno/{alunoId}/curso/{cursoId}
+#### GET /dashboard/aluno/{alunoId}/curso/{cursoId} — ALUNO, COORDENADOR, SUPER_ADMIN
 
-Retorna o progresso do aluno no curso com horas aprovadas por área.
+Retorna o progresso do aluno no curso com horas aprovadas por área, incluindo progresso semestral.
 
 **Resposta esperada:**
 ```json
@@ -312,27 +330,19 @@ Retorna o progresso do aluno no curso com horas aprovadas por área.
             "area": "Extensão",
             "horasAprovadas": 20,
             "limiteHoras": 60,
-            "concluido": false
-        },
-        {
-            "area": "Pesquisa",
-            "horasAprovadas": 15,
-            "limiteHoras": 40,
-            "concluido": false
-        },
-        {
-            "area": "Ensino",
-            "horasAprovadas": 10,
-            "limiteHoras": 30,
-            "concluido": false
+            "concluido": false,
+            "horasAprovadasSemestre": 10,
+            "limiteSemestral": 20,
+            "concluidoSemestre": false
         }
     ],
-    "totalHorasAprovadas": 45,
+    "totalHorasAprovadas": 20,
     "totalHorasExigidas": 130
 }
 ```
 
-> O campo `concluido` será `true` quando o aluno atingir o limite de horas da área.
+> `concluido` indica se o aluno atingiu o limite total da área no curso.
+> `concluidoSemestre` indica se o aluno atingiu o limite semestral da área.
 
 ---
 
@@ -355,11 +365,12 @@ src/main/java/br/edu/senac/backend/
 
 - Java 21
 - Spring Boot 4
-- Spring Security + JWT (JJWT 0.12.3)
+- Spring Security + JWT (JJWT 0.12.6)
 - Spring Data JPA + Hibernate
 - PostgreSQL
 - Flyway (migrations + seed)
 - Lombok
 - Bean Validation
+- SpringDoc OpenAPI (Swagger UI)
 - Mailtrap (e-mail sandbox para desenvolvimento)
 - Railway (deploy em produção)
