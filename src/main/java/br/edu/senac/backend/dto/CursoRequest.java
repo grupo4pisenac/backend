@@ -12,4 +12,6 @@ public class CursoRequest {
 
     @NotNull
     private Long coordenadorId;
+
+    private Integer totalSemestres;
 }

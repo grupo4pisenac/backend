@@ -34,6 +34,7 @@ public class CursoService {
 
         Curso curso = new Curso();
         curso.setNome(request.getNome());
+        curso.setTotalSemestres(request.getTotalSemestres() != null ? request.getTotalSemestres() : 1);
         cursoRepository.save(curso);
 
         Usuario coordenador = usuarioRepository.findById(request.getCoordenadorId())
@@ -87,6 +88,9 @@ public class CursoService {
                     return new RuntimeException("Curso não encontrado");
                 });
         curso.setNome(request.getNome());
+        if (request.getTotalSemestres() != null) {
+            curso.setTotalSemestres(request.getTotalSemestres());
+        }
         cursoRepository.save(curso);
 
         if (request.getCoordenadorId() != null) {
