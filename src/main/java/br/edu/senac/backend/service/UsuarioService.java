@@ -7,11 +7,13 @@ import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.Usuario;
 import br.edu.senac.backend.model.enums.PerfilUsuario;
 import br.edu.senac.backend.repository.CursoRepository;
+import br.edu.senac.backend.repository.SolicitacaoRepository;
 import br.edu.senac.backend.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +25,7 @@ public class UsuarioService {
 
     private final UsuarioRepository usuarioRepository;
     private final CursoRepository cursoRepository;
+    private final SolicitacaoRepository solicitacaoRepository;
     private final PasswordEncoder passwordEncoder;
 
     public UsuarioResponse criar(UsuarioRequest request) {
@@ -98,9 +101,11 @@ public class UsuarioService {
         return toResponse(usuario);
     }
 
+    @Transactional
     public void deletar(Long id) {
         log.info("Deletando usuário id={}", id);
         buscarUsuario(id);
+        solicitacaoRepository.deleteByAlunoId(id);
         usuarioRepository.deleteById(id);
         log.info("Usuário id={} deletado com sucesso", id);
     }

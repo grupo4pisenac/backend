@@ -13,4 +13,5 @@ public interface SolicitacaoRepository extends JpaRepository<Solicitacao, Long> 
     List<Solicitacao> findByAlunoIdAndStatus(Long alunoId, StatusSolicitacao status);
     List<Solicitacao> findByCursoIdAndStatus(Long cursoId, StatusSolicitacao status);
     List<Solicitacao> findByAlunoIdAndCursoId(Long alunoId, Long cursoId);
+    void deleteByAlunoId(Long alunoId);
 }
