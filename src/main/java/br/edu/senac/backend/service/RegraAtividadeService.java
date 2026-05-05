@@ -118,6 +118,7 @@ public class RegraAtividadeService {
         response.setId(regra.getId());
         response.setArea(regra.getArea());
         response.setLimiteHoras(regra.getLimiteHoras());
+        response.setLimiteSemestral(regra.getLimiteSemestral());
         return response;
     }
 }
