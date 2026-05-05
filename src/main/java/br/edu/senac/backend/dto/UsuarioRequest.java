@@ -23,4 +23,6 @@ public class UsuarioRequest {
     private PerfilUsuario perfil;
 
     private List<Long> cursoIds;
+
+    private Integer semestreAtual;
 }
