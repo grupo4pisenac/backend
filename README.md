@@ -35,7 +35,7 @@ Antes de rodar o projeto localmente, certifique-se de ter instalado:
 CREATE DATABASE senac_pi_4;
 ```
 
-3. Suba o projeto uma vez — o Flyway criará as tabelas e populará automaticamente com os dados do seed (migrations V1 a V11)
+3. Suba o projeto uma vez — o Flyway criará as tabelas e populará automaticamente com os dados do seed (migrations V1 a V12)
 
 4. O seed já inclui um super admin com as seguintes credenciais:
 
@@ -60,14 +60,17 @@ CREATE DATABASE senac_pi_4;
 
 ---
 
-## Configuração do Mailtrap (e-mail para desenvolvimento)
+## Configuração de e-mail (Brevo)
 
-O projeto usa o [Mailtrap](https://mailtrap.io) para simular o envio de e-mails em desenvolvimento. Nenhum e-mail real é enviado.
+O projeto usa a API HTTP do [Brevo](https://brevo.com) para envio de e-mails, contornando o bloqueio de portas SMTP do Railway.
 
-1. Crie uma conta gratuita em [mailtrap.io](https://mailtrap.io)
-2. Acesse **Sandboxes → My Sandbox → SMTP Settings**
-3. Copie o **Username** e o **Password** exibidos
-4. Adicione essas credenciais no arquivo `.env` conforme instruções abaixo
+1. Crie uma conta gratuita em [brevo.com](https://brevo.com)
+2. Vá em **Settings → SMTP & API → API keys & MCP**
+3. Clique em **Generate a new API** e copie a chave gerada
+4. Vá em **Settings → Senders, Domains & IPs** e verifique o e-mail remetente
+5. Adicione a API Key no arquivo `.env` conforme instruções abaixo
+
+> ⚠️ O e-mail remetente está configurado diretamente no código em `EmailService.java`. Altere o campo `FROM_EMAIL` se necessário.
 
 ---
 
@@ -79,8 +82,7 @@ Crie um arquivo `.env` na raiz do projeto (mesma pasta do `pom.xml`) com o segui
 DB_USERNAME=seu_usuario_postgres
 DB_PASSWORD=sua_senha_postgres
 JWT_SECRET=sua_chave_secreta_com_minimo_32_caracteres
-MAIL_USERNAME=seu_username_mailtrap
-MAIL_PASSWORD=sua_password_mailtrap
+MAIL_PASSWORD=sua_api_key_do_brevo
 ```
 
 > ⚠️ O arquivo `.env` está no `.gitignore` e **nunca deve ser commitado**. Ele contém credenciais sensíveis.
@@ -168,7 +170,8 @@ Retorna o token JWT, o perfil e o nome do usuário.
 ```json
 {
     "nome": "Engenharia de Software",
-    "coordenadorId": 2
+    "coordenadorId": 2,
+    "totalSemestres": 4
 }
 ```
 
@@ -182,7 +185,8 @@ Retorna um curso pelo ID.
 ```json
 {
     "nome": "Novo Nome do Curso",
-    "coordenadorId": 3
+    "coordenadorId": 3,
+    "totalSemestres": 4
 }
 ```
 
@@ -372,5 +376,5 @@ src/main/java/br/edu/senac/backend/
 - Lombok
 - Bean Validation
 - SpringDoc OpenAPI (Swagger UI)
-- Mailtrap (e-mail sandbox para desenvolvimento)
+- Brevo (envio de e-mails via API HTTP)
 - Railway (deploy em produção)
