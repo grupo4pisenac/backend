@@ -18,7 +18,7 @@ public class Curso {
 
     private Integer totalSemestres;
 
-    @OneToMany(mappedBy = "curso")
+    @OneToMany(mappedBy = "curso", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<RegraAtividade> regras;
 
     @ManyToMany(mappedBy = "cursos")

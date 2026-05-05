@@ -31,6 +31,6 @@ public class Solicitacao {
     @JoinColumn(name = "curso_id")
     private Curso curso;
 
-    @OneToOne(mappedBy = "solicitacao", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "solicitacao", cascade = CascadeType.ALL, orphanRemoval = true)
     private Certificado certificado;
 }
