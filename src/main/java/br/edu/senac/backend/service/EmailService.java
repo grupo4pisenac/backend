@@ -20,6 +20,7 @@ public class EmailService {
         log.info("Enviando email de nova solicitação para coordenador={}, aluno={}, area={}", emailCoordenador, nomeAluno, area);
         try {
             SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setFrom("hello@senac.com");
             mensagem.setTo(emailCoordenador);
             mensagem.setSubject("Nova solicitação de atividade complementar");
             mensagem.setText("O aluno " + nomeAluno + " enviou uma nova solicitação na área de " + area + ". Acesse o sistema para analisar.");
@@ -35,6 +36,7 @@ public class EmailService {
         log.info("Enviando email de status atualizado para aluno={}, status={}", emailAluno, status);
         try {
             SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setFrom("hello@senac.com");
             mensagem.setTo(emailAluno);
             mensagem.setSubject("Atualização da sua solicitação de atividade complementar");
             String textoStatus = status == StatusSolicitacao.APROVADA ? "aprovada" : "reprovada";
@@ -52,6 +54,7 @@ public class EmailService {
                 emailAluno, area, semestre, horasAprovadas, limiteSemestral);
         try {
             SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setFrom("hello@senac.com");
             mensagem.setTo(emailAluno);
             mensagem.setSubject("Limite semestral de horas atingido - " + area);
             mensagem.setText("Olá " + nomeAluno + ", suas horas aprovadas na área de " + area +
