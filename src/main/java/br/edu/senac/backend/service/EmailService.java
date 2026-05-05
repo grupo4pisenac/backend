@@ -23,7 +23,7 @@ public class EmailService {
     private String apiToken;
 
     private static final String MAILTRAP_API_URL = "https://send.api.mailtrap.io/api/send";
-    private static final String FROM_EMAIL = "hello@senac.com";
+    private static final String FROM_EMAIL = "hello@demomailtrap.co";
     private static final String FROM_NAME = "Sistema SENAC";
 
     private void enviar(String para, String assunto, String texto) {
