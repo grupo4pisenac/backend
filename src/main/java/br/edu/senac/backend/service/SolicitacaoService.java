@@ -153,6 +153,18 @@ public class SolicitacaoService {
         return toResponse(solicitacao);
     }
 
+    public void deletar(Long id) {
+        log.info("Deletando solicitação id={}", id);
+        solicitacaoRepository.findById(id)
+                .orElseThrow(() -> {
+                    log.error("Solicitação não encontrada id={}", id);
+                    return new RuntimeException("Solicitação não encontrada");
+                });
+        solicitacaoRepository.deleteById(id);
+        log.info("Solicitação id={} deletada com sucesso", id);
+    }
+
+
     private Usuario buscarUsuario(Long id) {
         return usuarioRepository.findById(id)
                 .orElseThrow(() -> {

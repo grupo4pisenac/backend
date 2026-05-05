@@ -47,6 +47,14 @@ public class SolicitacaoController {
         return ResponseEntity.ok(solicitacaoService.atualizarStatus(id, status));
     }
 
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+    public ResponseEntity<Void> deletar(@PathVariable Long id) {
+        solicitacaoService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
     @GetMapping("/aluno/{alunoId}/filtro")
     @PreAuthorize("hasAnyRole('ALUNO', 'COORDENADOR', 'SUPER_ADMIN')")
     public ResponseEntity<List<SolicitacaoResponse>> listarPorAlunoEStatus(
