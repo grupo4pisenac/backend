@@ -1,7 +1,9 @@
 package br.edu.senac.backend.service;
 
 import br.edu.senac.backend.dto.AreaProgressoDTO;
+import br.edu.senac.backend.dto.CursoDropdownResponse;
 import br.edu.senac.backend.dto.DashboardAlunoResponse;
+import br.edu.senac.backend.dto.DashboardCursoResponse;
 import br.edu.senac.backend.model.Curso;
 import br.edu.senac.backend.model.RegraAtividade;
 import br.edu.senac.backend.model.Solicitacao;
@@ -34,23 +36,78 @@ public class DashboardService {
         validarAcessoAluno(alunoId);
 
         Usuario aluno = usuarioRepository.findById(alunoId)
-                .orElseThrow(() -> {
-                    log.error("Aluno não encontrado id={}", alunoId);
-                    return new RuntimeException("Aluno não encontrado");
-                });
+                .orElseThrow(() -> new RuntimeException("Aluno não encontrado"));
 
         Curso curso = cursoRepository.findById(cursoId)
-                .orElseThrow(() -> {
-                    log.error("Curso não encontrado id={}", cursoId);
-                    return new RuntimeException("Curso não encontrado");
-                });
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
 
+        return montarDashboardAluno(aluno, curso);
+    }
+
+    public List<CursoDropdownResponse> meusCursos() {
+        Usuario autenticado = getUsuarioAutenticado();
+        log.debug("Buscando cursos para dropdown usuarioId={}, perfil={}", autenticado.getId(), autenticado.getPerfil());
+
+        List<Curso> cursos = autenticado.getPerfil() == PerfilUsuario.SUPER_ADMIN
+                ? cursoRepository.findAll()
+                : autenticado.getCursos();
+
+        return cursos.stream().map(c -> {
+            CursoDropdownResponse dto = new CursoDropdownResponse();
+            dto.setId(c.getId());
+            dto.setNome(c.getNome());
+            return dto;
+        }).toList();
+    }
+
+    public DashboardAlunoResponse dashboardMeu(Long cursoId) {
+        Usuario aluno = getUsuarioAutenticado();
+        log.info("Carregando dashboard próprio alunoId={}, cursoId={}", aluno.getId(), cursoId);
+
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+
+        return montarDashboardAluno(aluno, curso);
+    }
+
+    public DashboardCursoResponse dashboardPorCurso(Long cursoId) {
+        Usuario autenticado = getUsuarioAutenticado();
+        log.info("Carregando dashboard do curso cursoId={}, usuarioId={}", cursoId, autenticado.getId());
+
+        Curso curso = cursoRepository.findById(cursoId)
+                .orElseThrow(() -> new RuntimeException("Curso não encontrado"));
+
+        if (autenticado.getPerfil() == PerfilUsuario.COORDENADOR) {
+            boolean coordenaEsseCurso = autenticado.getCursos().stream()
+                    .anyMatch(c -> c.getId().equals(cursoId));
+            if (!coordenaEsseCurso) {
+                log.warn("Coordenador id={} tentou acessar curso id={} que não coordena", autenticado.getId(), cursoId);
+                throw new RuntimeException("Acesso negado");
+            }
+        }
+
+        List<Usuario> alunos = curso.getUsuarios().stream()
+                .filter(u -> u.getPerfil() == PerfilUsuario.ALUNO)
+                .toList();
+
+        log.debug("Total de alunos no cursoId={}: {}", cursoId, alunos.size());
+
+        List<DashboardAlunoResponse> dashboardAlunos = alunos.stream()
+                .map(aluno -> montarDashboardAluno(aluno, curso))
+                .toList();
+
+        DashboardCursoResponse response = new DashboardCursoResponse();
+        response.setCursoId(curso.getId());
+        response.setNomeCurso(curso.getNome());
+        response.setAlunos(dashboardAlunos);
+        return response;
+    }
+
+    private DashboardAlunoResponse montarDashboardAluno(Usuario aluno, Curso curso) {
         List<Solicitacao> aprovadas = solicitacaoRepository
-                .findByAlunoIdAndCursoIdAndStatus(alunoId, cursoId, StatusSolicitacao.APROVADA);
+                .findByAlunoIdAndCursoIdAndStatus(aluno.getId(), curso.getId(), StatusSolicitacao.APROVADA);
 
-        log.debug("Total de solicitações aprovadas para alunoId={}, cursoId={}: {}", alunoId, cursoId, aprovadas.size());
-
-        List<RegraAtividade> regras = regraAtividadeRepository.findByCursoId(cursoId);
+        List<RegraAtividade> regras = regraAtividadeRepository.findByCursoId(curso.getId());
 
         List<AreaProgressoDTO> areas = regras.stream().map(regra -> {
             int horasAprovadas = aprovadas.stream()
@@ -64,9 +121,6 @@ public class DashboardService {
                             && s.getSemestre().equals(aluno.getSemestreAtual()))
                     .mapToInt(Solicitacao::getHorasSolicitadas)
                     .sum();
-
-            log.debug("Área={} | horasAprovadas={} | horasAprovadasSemestre={} | limiteHoras={} | limiteSemestral={}",
-                    regra.getArea(), horasAprovadas, horasAprovadasSemestre, regra.getLimiteHoras(), regra.getLimiteSemestral());
 
             AreaProgressoDTO dto = new AreaProgressoDTO();
             dto.setArea(regra.getArea());
@@ -82,8 +136,6 @@ public class DashboardService {
         int totalAprovadas = areas.stream().mapToInt(AreaProgressoDTO::getHorasAprovadas).sum();
         int totalExigidas = regras.stream().mapToInt(RegraAtividade::getLimiteHoras).sum();
 
-        log.info("Dashboard carregado para alunoId={} | totalAprovadas={} | totalExigidas={}", alunoId, totalAprovadas, totalExigidas);
-
         DashboardAlunoResponse response = new DashboardAlunoResponse();
         response.setNomeAluno(aluno.getNome());
         response.setNomeCurso(curso.getNome());
@@ -96,10 +148,7 @@ public class DashboardService {
     private Usuario getUsuarioAutenticado() {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         return usuarioRepository.findByEmail(email)
-                .orElseThrow(() -> {
-                    log.error("Usuário autenticado não encontrado email={}", email);
-                    return new RuntimeException("Usuário não encontrado");
-                });
+                .orElseThrow(() -> new RuntimeException("Usuário não encontrado"));
     }
 
     private void validarAcessoAluno(Long alunoId) {
