@@ -83,6 +83,7 @@ public class SolicitacaoService {
     public List<SolicitacaoResponse> listarPorCurso(Long cursoId) {
         log.debug("Listando solicitações do cursoId={}", cursoId);
         buscarCurso(cursoId);
+        validarAcessoCoordenador(cursoId);
         return solicitacaoRepository.findByCursoId(cursoId)
                 .stream()
                 .map(this::toResponse)
@@ -97,6 +98,8 @@ public class SolicitacaoService {
                     log.error("Solicitação não encontrada id={}", id);
                     return new RuntimeException("Solicitação não encontrada");
                 });
+
+        validarAcessoCoordenador(solicitacao.getCurso().getId());
 
         if (novoStatus == StatusSolicitacao.APROVADA) {
             regraAtividadeRepository.findByCursoId(solicitacao.getCurso().getId()).stream()
@@ -210,6 +213,7 @@ public class SolicitacaoService {
     public List<SolicitacaoResponse> listarPorCursoEStatus(Long cursoId, StatusSolicitacao status) {
         log.debug("Listando solicitações cursoId={}, status={}", cursoId, status);
         buscarCurso(cursoId);
+        validarAcessoCoordenador(cursoId);
         return solicitacaoRepository.findByCursoIdAndStatus(cursoId, status)
                 .stream()
                 .map(this::toResponse)
@@ -221,6 +225,7 @@ public class SolicitacaoService {
         validarAcessoAluno(alunoId);
         buscarUsuario(alunoId);
         buscarCurso(cursoId);
+        validarAcessoCoordenador(cursoId);
         return solicitacaoRepository.findByAlunoIdAndCursoId(alunoId, cursoId)
                 .stream()
                 .map(this::toResponse)
@@ -241,6 +246,18 @@ public class SolicitacaoService {
         if (autenticado.getPerfil() == PerfilUsuario.ALUNO && !autenticado.getId().equals(alunoId)) {
             log.warn("Acesso negado: alunoAutenticado={} tentou acessar dados de alunoId={}", autenticado.getId(), alunoId);
             throw new RuntimeException("Acesso negado");
+        }
+    }
+
+    private void validarAcessoCoordenador(Long cursoId) {
+        Usuario autenticado = getUsuarioAutenticado();
+        if (autenticado.getPerfil() == PerfilUsuario.COORDENADOR) {
+            boolean coordenaEsseCurso = autenticado.getCursos().stream()
+                    .anyMatch(c -> c.getId().equals(cursoId));
+            if (!coordenaEsseCurso) {
+                log.warn("Coordenador id={} tentou acessar curso id={} que não coordena", autenticado.getId(), cursoId);
+                throw new RuntimeException("Acesso negado");
+            }
         }
     }
 }
