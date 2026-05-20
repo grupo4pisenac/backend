@@ -15,10 +15,10 @@ public class EmailService {
 
     private final RestClient restClient = RestClient.create();
 
-    @Value("${brevo.api.key}")
-    private String apiKey;
+    @Value("${mailtrap.api.token}")
+    private String apiToken;
 
-    private static final String FROM_EMAIL = "grupo4pisenac26@gmail.com";
+    private static final String FROM_EMAIL = "admin@senac.com";
 
     @Async
     public void enviarEmailNovaSolicitacao(String emailCoordenador, String nomeAluno, String area) {
@@ -59,7 +59,7 @@ public class EmailService {
 
             restClient.post()
                     .uri("https://api.brevo.com/v3/smtp/email")
-                    .header("api-key", apiKey)
+                    .header("Authorization", "Bearer " + apiToken)
                     .header("Content-Type", "application/json")
                     .body(body)
                     .retrieve()
