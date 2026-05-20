@@ -6,10 +6,10 @@ API REST desenvolvida em Java 21 com Spring Boot 4, responsável por gerenciar a
 
 ## 🚀 Deploy
 
-A API está disponível em produção no Railway:
+A API está disponível em produção no Render:
 
 ```
-https://backend-production-a784.up.railway.app
+https://backend-5v4v.onrender.com
 ```
 
 ---
