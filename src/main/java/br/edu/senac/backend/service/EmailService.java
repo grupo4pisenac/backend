@@ -1,24 +1,21 @@
 package br.edu.senac.backend.service;
 
 import br.edu.senac.backend.model.enums.StatusSolicitacao;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.SimpleMailMessage;
+import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestClient;
-
-import java.util.Map;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class EmailService {
 
-    private final RestClient restClient = RestClient.create();
+    private final JavaMailSender mailSender;
 
-    @Value("${mailtrap.api.token}")
-    private String apiToken;
-
-    private static final String FROM_EMAIL = "admin@senac.com";
+    private static final String FROM_EMAIL = "sistema@senac.com";
 
     @Async
     public void enviarEmailNovaSolicitacao(String emailCoordenador, String nomeAluno, String area) {
@@ -50,21 +47,12 @@ public class EmailService {
 
     private void enviar(String para, String assunto, String texto) {
         try {
-            Map<String, Object> body = Map.of(
-                    "from", Map.of("email", FROM_EMAIL, "name", "Sistema SENAC"),
-                    "to", new Object[]{Map.of("email", para)},
-                    "subject", assunto,
-                    "text", texto
-            );
-
-            restClient.post()
-                    .uri("https://send.api.mailtrap.io/api/send")
-                    .header("Authorization", "Bearer " + apiToken)
-                    .header("Content-Type", "application/json")
-                    .body(body)
-                    .retrieve()
-                    .toBodilessEntity();
-
+            SimpleMailMessage mensagem = new SimpleMailMessage();
+            mensagem.setFrom(FROM_EMAIL);
+            mensagem.setTo(para);
+            mensagem.setSubject(assunto);
+            mensagem.setText(texto);
+            mailSender.send(mensagem);
             log.debug("Email enviado com sucesso para={}", para);
         } catch (Exception e) {
             log.error("Falha ao enviar email para={}: {}", para, e.getMessage());
