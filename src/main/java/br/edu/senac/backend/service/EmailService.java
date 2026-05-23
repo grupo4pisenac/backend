@@ -51,14 +51,14 @@ public class EmailService {
     private void enviar(String para, String assunto, String texto) {
         try {
             Map<String, Object> body = Map.of(
-                    "sender", Map.of("email", FROM_EMAIL, "name", "Sistema SENAC"),
+                    "from", Map.of("email", FROM_EMAIL, "name", "Sistema SENAC"),
                     "to", new Object[]{Map.of("email", para)},
                     "subject", assunto,
-                    "textContent", texto
+                    "text", texto
             );
 
             restClient.post()
-                    .uri("https://api.brevo.com/v3/smtp/email")
+                    .uri("https://send.api.mailtrap.io/api/send")
                     .header("Authorization", "Bearer " + apiToken)
                     .header("Content-Type", "application/json")
                     .body(body)
