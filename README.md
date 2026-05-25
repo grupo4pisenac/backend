@@ -41,34 +41,21 @@ CREATE DATABASE senac_pi_4;
 
 ```json
 {
-    "email": "admin@senac.com",
-    "senha": "password"
+  "email": "admin@senac.com",
+  "senha": "password"
 }
 ```
 
-> Caso precise inserir o admin manualmente, use o hash abaixo (válido para a senha `password`):
-> ```sql
-> INSERT INTO usuarios (nome, email, senha, perfil, semestre_atual)
-> VALUES (
->     'Admin',
->     'admin@senac.com',
->     '$2b$10$vSqYzehzYDJ99xjLYjYP5ehg3/k4r/OeBRmOZzISEVfauAeDPdzIe',
->     'SUPER_ADMIN',
->     1
-> );
-> ```
-
 ---
 
-## Configuração de e-mail (Brevo)
+## Configuração de e-mail (Mailtrap)
 
-O projeto usa a API HTTP do [Brevo](https://brevo.com) para envio de e-mails, contornando o bloqueio de portas SMTP do Railway.
+O projeto usa o SMTP do [Mailtrap](https://mailtrap.io) para envio de e-mails.
 
-1. Crie uma conta gratuita em [brevo.com](https://brevo.com)
-2. Vá em **Settings → SMTP & API → API keys & MCP**
-3. Clique em **Generate a new API** e copie a chave gerada
-4. Vá em **Settings → Senders, Domains & IPs** e verifique o e-mail remetente
-5. Adicione a API Key no arquivo `.env` conforme instruções abaixo
+1. Crie uma conta gratuita em [mailtrap.io](https://mailtrap.io)
+2. Acesse **Sandboxes → My Sandbox → Integration → SMTP**
+3. Copie o **Username** e o **Password**
+4. Adicione as credenciais no arquivo `.env` conforme instruções abaixo
 
 > ⚠️ O e-mail remetente está configurado diretamente no código em `EmailService.java`. Altere o campo `FROM_EMAIL` se necessário.
 
@@ -82,7 +69,9 @@ Crie um arquivo `.env` na raiz do projeto (mesma pasta do `pom.xml`) com o segui
 DB_USERNAME=seu_usuario_postgres
 DB_PASSWORD=sua_senha_postgres
 JWT_SECRET=sua_chave_secreta_com_minimo_32_caracteres
-MAIL_PASSWORD=sua_api_key_do_brevo
+MAIL_USERNAME=seu_username_mailtrap
+MAIL_PASSWORD=sua_senha_mailtrap
+SPRING_DATASOURCE_URL=jdbc:postgresql://localhost:5432/senac_pi_4
 ```
 
 > ⚠️ O arquivo `.env` está no `.gitignore` e **nunca deve ser commitado**. Ele contém credenciais sensíveis.
@@ -122,7 +111,7 @@ http://localhost:8080/swagger-ui/index.html
 Em produção:
 
 ```
-https://backend-production-a784.up.railway.app/swagger-ui/index.html
+https://backend-5v4v.onrender.com/swagger-ui/index.html
 ```
 
 ---
@@ -147,7 +136,7 @@ https://backend-production-a784.up.railway.app/swagger-ui/index.html
 > No Insomnia vá em **Auth → Bearer Token** e cole o token.
 >
 > Substitua `http://localhost:8080` pelo link de produção quando necessário:
-> `https://backend-production-a784.up.railway.app`
+> `https://backend-5v4v.onrender.com`
 
 ---
 
@@ -156,8 +145,8 @@ https://backend-production-a784.up.railway.app/swagger-ui/index.html
 #### POST /auth/login
 ```json
 {
-    "email": "admin@senac.com",
-    "senha": "password"
+    "email": "email@exemplo.com",
+    "senha": "senha"
 }
 ```
 Retorna o token JWT, o perfil e o nome do usuário.
@@ -184,7 +173,7 @@ Retorna um curso pelo ID.
 #### PUT /cursos/{id} — SUPER_ADMIN
 ```json
 {
-    "nome": "Novo Nome do Curso",
+    "nome": "Novo nome do curso",
     "coordenadorId": 3,
     "totalSemestres": 4
 }
@@ -203,9 +192,9 @@ Remove o curso pelo ID.
 #### POST /usuarios — SUPER_ADMIN, COORDENADOR
 ```json
 {
-    "nome": "Nome do Usuário",
+    "nome": "Nome do usuário",
     "email": "email@exemplo.com",
-    "senha": "senha123",
+    "senha": "senha",
     "perfil": "ALUNO",
     "cursoIds": [1],
     "semestreAtual": 1
@@ -228,7 +217,7 @@ Retorna um usuário pelo ID.
 #### PUT /usuarios/{id} — SUPER_ADMIN
 ```json
 {
-    "nome": "Nome Atualizado",
+    "nome": "Nome atualizado",
     "email": "email@exemplo.com",
     "senha": "",
     "perfil": "ALUNO",
@@ -316,12 +305,26 @@ Retorna as solicitações do curso filtradas por status.
 > Ao aprovar, o sistema valida o limite semestral da área. Se ultrapassado, as horas são ajustadas automaticamente e um e-mail é enviado ao aluno.
 > O aluno também recebe um e-mail informando o resultado independente do status.
 
+#### DELETE /solicitacoes/{id} — SUPER_ADMIN
+Remove uma solicitação pelo ID.
+
 ---
 
 ### Dashboard
 
-#### GET /dashboard/aluno/{alunoId}/curso/{cursoId} — ALUNO, COORDENADOR, SUPER_ADMIN
+#### GET /dashboard/meus-cursos — ALUNO, COORDENADOR, SUPER_ADMIN
+Retorna a lista de cursos disponíveis para o usuário autenticado (usado para montar o dropdown).
 
+#### GET /dashboard/meu/curso/{cursoId} — ALUNO
+Retorna o dashboard do próprio aluno no curso selecionado.
+
+#### GET /dashboard/coordenador/curso/{cursoId} — COORDENADOR
+Retorna o dashboard de todos os alunos do curso.
+
+#### GET /dashboard/admin/curso/{cursoId} — SUPER_ADMIN
+Retorna o dashboard de todos os alunos do curso.
+
+#### GET /dashboard/aluno/{alunoId}/curso/{cursoId} — ALUNO, COORDENADOR, SUPER_ADMIN
 Retorna o progresso do aluno no curso com horas aprovadas por área, incluindo progresso semestral.
 
 **Resposta esperada:**
@@ -376,5 +379,5 @@ src/main/java/br/edu/senac/backend/
 - Lombok
 - Bean Validation
 - SpringDoc OpenAPI (Swagger UI)
-- Brevo (envio de e-mails via API HTTP)
-- Railway (deploy em produção)
+- Mailtrap SMTP (envio de e-mails)
+- Render (deploy em produção)
