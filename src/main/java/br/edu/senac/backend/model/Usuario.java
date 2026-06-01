@@ -8,6 +8,7 @@ import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
+import java.time.LocalDateTime;
 
 import java.util.Collection;
 import java.util.List;
@@ -43,8 +44,19 @@ public class Usuario implements UserDetails {
     }
 
     @Override
-    public String getPassword() { return senha; }
+    public String getPassword() {
+        return senha;
+    }
 
     @Override
-    public String getUsername() { return email; }
+    public String getUsername() {
+        return email;
+    }
+
+
+    @Column(name = "reset_token")
+    private String resetToken;
+
+    @Column(name = "reset_token_expiracao")
+    private LocalDateTime resetTokenExpiracao;
 }

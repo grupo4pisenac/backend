@@ -44,6 +44,18 @@ public class EmailService {
                         "ultrapassando o limite semestral de " + limiteSemestral + "h. " +
                         "Acesse o sistema para mais detalhes.");
     }
+    @Async
+    public void enviarEmailResetSenha(String emailUsuario, String nomeUsuario, String token) {
+        log.info("Enviando email de reset de senha para usuario={}", emailUsuario);
+        enviar(emailUsuario,
+                "Redefinição de senha",
+                "Olá " + nomeUsuario + ",\n\n" +
+                        "Recebemos uma solicitação para redefinir a senha da sua conta.\n\n" +
+                        "Use o código abaixo para redefinir sua senha (válido por 30 minutos):\n\n" +
+                        token + "\n\n" +
+                        "Se você não solicitou a redefinição de senha, ignore este e-mail.\n\n" +
+                        "Atenciosamente,\nSistema de Atividades Complementares");
+    }
 
     private void enviar(String para, String assunto, String texto) {
         try {
