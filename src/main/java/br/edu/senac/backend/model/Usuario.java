@@ -52,11 +52,4 @@ public class Usuario implements UserDetails {
     public String getUsername() {
         return email;
     }
-
-
-    @Column(name = "reset_token")
-    private String resetToken;
-
-    @Column(name = "reset_token_expiracao")
-    private LocalDateTime resetTokenExpiracao;
 }
