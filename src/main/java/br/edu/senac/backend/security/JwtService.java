@@ -19,6 +19,7 @@ public class JwtService {
     private SecretKey getKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
     }
+    private static final long RESET_EXPIRATION = 1800000;
 
     public String gerarToken(UserDetails user) {
         return Jwts.builder()
@@ -40,5 +41,28 @@ public class JwtService {
 
     public boolean tokenValido(String token, UserDetails user) {
         return extrairEmail(token).equals(user.getUsername());
+    }
+
+    public String gerarTokenReset(String email) {
+        return Jwts.builder()
+                .subject(email)
+                .claim("type", "reset")
+                .issuedAt(new Date())
+                .expiration(new Date(System.currentTimeMillis() + RESET_EXPIRATION))
+                .signWith(getKey())
+                .compact();
+    }
+
+    public String extrairEmailDoResetToken(String token) {
+        var claims = Jwts.parser()
+                .verifyWith(getKey())
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
+
+        if (!"reset".equals(claims.get("type"))) {
+            throw new RuntimeException("Token inválido");
+        }
+        return claims.getSubject();
     }
 }

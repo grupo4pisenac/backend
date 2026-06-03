@@ -13,4 +13,8 @@ public class RedefinirSenhaRequest {
     @NotBlank
     @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
     private String novaSenha;
+
+    @NotBlank
+    @Size(min = 6, message = "A senha deve ter no mínimo 6 caracteres")
+    private String confirmarSenha;
 }

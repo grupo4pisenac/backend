@@ -41,7 +41,11 @@ public class AuthController {
     @PostMapping("/redefinir-senha")
     @Operation(summary = "Redefine a senha usando o token recebido por e-mail")
     public ResponseEntity<Void> redefinirSenha(@RequestBody @Valid RedefinirSenhaRequest request) {
-        passwordResetService.redefinirSenha(request.getToken(), request.getNovaSenha());
+        passwordResetService.redefinirSenha(
+                request.getToken(),
+                request.getNovaSenha(),
+                request.getConfirmarSenha()
+        );
         return ResponseEntity.ok().build();
     }
 }
