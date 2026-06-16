@@ -43,7 +43,7 @@ public class DashboardController {
     }
 
     @GetMapping("/coordenador/curso/{cursoId}")
-    @PreAuthorize("hasRole('COORDENADOR', 'ALUNO')")
+    @PreAuthorize("hasAnyRole('ALUNO','COORDENADOR')")
     public ResponseEntity<DashboardCursoResponse> dashboardCoordenador(
             @PathVariable Long cursoId) {
         return ResponseEntity.ok(dashboardService.dashboardPorCurso(cursoId));
