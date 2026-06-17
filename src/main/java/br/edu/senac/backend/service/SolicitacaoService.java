@@ -43,7 +43,7 @@ public class SolicitacaoService {
         solicitacao.setStatus(StatusSolicitacao.PENDENTE);
         solicitacao.setAluno(aluno);
         solicitacao.setCurso(curso);
-        solicitacao.setSemestre(aluno.getSemestreAtual());
+        solicitacao.setSemestre(request.getSemestre());
 
         solicitacaoRepository.save(solicitacao);
         log.debug("Solicitação salva id={}, semestre={}", solicitacao.getId(), solicitacao.getSemestre());
@@ -53,6 +53,7 @@ public class SolicitacaoService {
         certificado.setUrlArquivo(request.getUrlCertificado());
         certificado.setTipoArquivo("IMAGEM");
         certificado.setSolicitacao(solicitacao);
+        solicitacao.setCertificado(certificado);
         certificadoRepository.save(certificado);
 
         curso.getUsuarios().stream()

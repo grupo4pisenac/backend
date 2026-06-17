@@ -20,6 +20,10 @@ public class SolicitacaoRequest {
     @NotNull
     private Long cursoId;
 
+    @NotNull
+    @Min(1)
+    private Integer semestre;
+
     @NotBlank
     private String urlCertificado;
 }
